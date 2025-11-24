@@ -77,6 +77,7 @@
       const [scanning, setScanning] = useState(false);
       const [showComplete, setShowComplete] = useState(false);
       const [lastScanned, setLastScanned] = useState(null);
+      const [cameraStatus, setCameraStatus] = useState('');
       const videoRef = useRef(null);
       const canvasRef = useRef(null);
       const streamRef = useRef(null);
@@ -101,6 +102,7 @@
       }, [collectedStamps]);
 
       const startScanning = async () => {
+        setCameraStatus('カメラを起動中...');
         try {
           // より詳細なカメラ設定
           const constraints = {
@@ -111,24 +113,42 @@
             }
           };
 
+          setCameraStatus('カメラへのアクセスを要求中...');
           const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          
+          setCameraStatus('ストリームを取得しました');
+          console.log('Stream:', stream);
+          console.log('Video tracks:', stream.getVideoTracks());
           
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
             streamRef.current = stream;
             setScanning(true);
+            setCameraStatus('ビデオ要素に設定しました');
             
             // 明示的に再生を開始
             videoRef.current.onloadedmetadata = async () => {
               try {
+                setCameraStatus('メタデータ読み込み完了');
+                console.log('Video dimensions:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight);
                 await videoRef.current.play();
+                setCameraStatus('カメラ起動成功!');
                 console.log('カメラ起動成功');
                 scanIntervalRef.current = setInterval(scanQRCode, 500);
               } catch (playErr) {
                 console.error('再生エラー:', playErr);
+                setCameraStatus('再生エラー: ' + playErr.message);
                 alert('カメラの再生に失敗しました: ' + playErr.message);
               }
             };
+
+            // タイムアウト処理
+            setTimeout(() => {
+              if (videoRef.current && videoRef.current.readyState === 0) {
+                setCameraStatus('タイムアウト: カメラが応答しません');
+                console.error('Video element did not load');
+              }
+            }, 5000);
           }
         } catch (err) {
           console.error('カメラエラー:', err);
@@ -144,6 +164,7 @@
             errorMsg += 'エラー: ' + err.message;
           }
           
+          setCameraStatus('エラー: ' + err.message);
           alert(errorMsg);
           setScanning(false);
         }
@@ -248,11 +269,16 @@
                 </button>
               ) : (
                 <div className="space-y-4">
+                  {cameraStatus && (
+                    <div className="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded-lg text-sm">
+                      ステータス: {cameraStatus}
+                    </div>
+                  )}
                   <div className="relative bg-black rounded-xl overflow-hidden" style={{ minHeight: '300px' }}>
                     <video 
                       ref={videoRef} 
                       className="w-full h-full object-cover"
-                      style={{ minHeight: '300px' }}
+                      style={{ minHeight: '300px', maxHeight: '500px' }}
                       playsInline
                       autoPlay
                       muted
