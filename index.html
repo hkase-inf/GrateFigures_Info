@@ -5,7 +5,8 @@
   <title>情報学の偉人 スタンプラリー</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- QRコード読み取りライブラリ（html5-qrcode）CDN -->
+  <!-- ✅ QRコード読み取りライブラリ（必須） -->
+  <!-- これが読み込めないと Html5Qrcode is not defined になります -->
   <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 
   <style>
@@ -392,7 +393,7 @@
       </div>
 
       <div class="grid" aria-label="スタンプ一覧">
-        <!-- スタンプカードはJSで挿入 -->
+        <!-- JSで挿入 -->
       </div>
 
       <div style="margin-top:0.8rem; display:flex; justify-content:flex-end;">
@@ -407,242 +408,252 @@
     </footer>
   </main>
 
-<script>
-  // --- 設定: 偉人とQRコードURLフラグメントの対応 --------------------
+  <script>
+    // --- 設定: 偉人とQRコードURLフラグメントの対応 --------------------
 
-  const FIGURES = [
-    {
-      id: "gratefigures_01",
-      nameEn: "Grace Hopper",
-      nameJa: "グレイス・ホッパー",
-      fragment: "#gratefigures_01",
-      url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#gratefigures_01"
-    },
-    {
-      id: "gratefigures_02",
-      nameEn: "Tim Berners-Lee",
-      nameJa: "ティム・バーナーズ＝リー",
-      fragment: "#gratefigures_02",
-      url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#gratefigures_02"
-    },
-    {
-      id: "greatfigures_03",
-      nameEn: "Marvin Minsky",
-      nameJa: "マーヴィン・ミンスキー",
-      fragment: "#greatfigures_03",
-      url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_03"
-    },
-    {
-      id: "greatfigures_04",
-      nameEn: "Alan Turing",
-      nameJa: "アラン・チューリング",
-      fragment: "#greatfigures_04",
-      url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_04"
-    },
-    {
-      id: "greatfigures_05",
-      nameEn: "Claude Shannon",
-      nameJa: "クロード・シャノン",
-      fragment: "#greatfigures_05",
-      url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_05"
-    },
-    {
-      id: "greatfigures_06",
-      nameEn: "John von Neumann",
-      nameJa: "ジョン・フォン・ノイマン",
-      fragment: "#greatfigures_06",
-      url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_06"
-    },
-    {
-      id: "greatfigures_07",
-      nameEn: "Alan Kay",
-      nameJa: "アラン・ケイ",
-      fragment: "#greatfigures_07",
-      url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_07"
-    },
-    {
-      id: "greatfigures_08",
-      nameEn: "Jun Murai",
-      nameJa: "村井 純",
-      fragment: "#greatfigures_08",
-      url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_08"
-    },
-    {
-      id: "greatfigures_09",
-      nameEn: "Herbert A. Simon",
-      nameJa: "ハーバート・サイモン",
-      fragment: "#greatfigures_09",
-      url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_09"
-    }
-  ];
-
-  const STORAGE_KEY = "info-legends-stamp-v1";
-
-  // --- 状態: スタンプ状況 -------------------------------------------
-
-  let state = {
-    stamps: {},
-    lastUpdated: null
-  };
-
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        state = Object.assign(state, parsed);
+    const FIGURES = [
+      {
+        id: "gratefigures_01",
+        nameEn: "Grace Hopper",
+        nameJa: "グレイス・ホッパー",
+        fragment: "#gratefigures_01",
+        url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#gratefigures_01"
+      },
+      {
+        id: "gratefigures_02",
+        nameEn: "Tim Berners-Lee",
+        nameJa: "ティム・バーナーズ＝リー",
+        fragment: "#gratefigures_02",
+        url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#gratefigures_02"
+      },
+      {
+        id: "greatfigures_03",
+        nameEn: "Marvin Minsky",
+        nameJa: "マーヴィン・ミンスキー",
+        fragment: "#greatfigures_03",
+        url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_03"
+      },
+      {
+        id: "greatfigures_04",
+        nameEn: "Alan Turing",
+        nameJa: "アラン・チューリング",
+        fragment: "#greatfigures_04",
+        url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_04"
+      },
+      {
+        id: "greatfigures_05",
+        nameEn: "Claude Shannon",
+        nameJa: "クロード・シャノン",
+        fragment: "#greatfigures_05",
+        url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_05"
+      },
+      {
+        id: "greatfigures_06",
+        nameEn: "John von Neumann",
+        nameJa: "ジョン・フォン・ノイマン",
+        fragment: "#greatfigures_06",
+        url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_06"
+      },
+      {
+        id: "greatfigures_07",
+        nameEn: "Alan Kay",
+        nameJa: "アラン・ケイ",
+        fragment: "#greatfigures_07",
+        url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_07"
+      },
+      {
+        id: "greatfigures_08",
+        nameEn: "Jun Murai",
+        nameJa: "村井 純",
+        fragment: "#greatfigures_08",
+        url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_08"
+      },
+      {
+        id: "greatfigures_09",
+        nameEn: "Herbert A. Simon",
+        nameJa: "ハーバート・サイモン",
+        fragment: "#greatfigures_09",
+        url: "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/#greatfigures_09"
       }
-    } catch (e) {
-      console.error("Failed to load state:", e);
-    }
-    FIGURES.forEach(f => {
-      if (!(f.id in state.stamps)) {
-        state.stamps[f.id] = false;
+    ];
+
+    const STORAGE_KEY = "info-legends-stamp-v1";
+
+    let state = { stamps: {}, lastUpdated: null };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) state = Object.assign(state, JSON.parse(raw));
+      } catch (e) {
+        console.error("Failed to load state:", e);
       }
-    });
-  }
-
-  function saveState() {
-    try {
-      state.lastUpdated = new Date().toISOString();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-      console.error("Failed to save state:", e);
-    }
-  }
-
-  // --- UI 構築 -------------------------------------------------------
-
-  const gridEl = document.querySelector(".grid");
-  const progressCountEl = document.getElementById("progress-count");
-  const progressBarEl = document.getElementById("progress-bar");
-  const completionMessageEl = document.getElementById("completion-message");
-  const scanMessageEl = document.getElementById("scan-message");
-  const scanMessageIconEl = document.getElementById("scan-message-icon");
-  const scanMessageTextEl = document.getElementById("scan-message-text");
-
-  function renderGrid() {
-    gridEl.innerHTML = "";
-    FIGURES.forEach((fig, index) => {
-      const done = !!state.stamps[fig.id];
-      const card = document.createElement("article");
-      card.className = "stamp-card" + (done ? " complete" : "");
-      card.setAttribute("data-id", fig.id);
-      card.innerHTML = `
-        <div class="stamp-title">
-          <span>${index + 1}. ${fig.nameEn}</span>
-          <span class="stamp-title-ja">${fig.nameJa}</span>
-        </div>
-        <div class="stamp-status">
-          <span class="badge ${done ? "badge-done" : "badge-yet"}">
-            ${done ? "GET!" : "まだ"}
-          </span>
-          <span>${done ? "QRコードを読み取り済み" : "ポスターのQRコードをさがしてスキャンしよう"}</span>
-        </div>
-        <div class="stamp-stampmark">STAMP</div>
-      `;
-      gridEl.appendChild(card);
-    });
-  }
-
-  function updateProgress() {
-    const total = FIGURES.length;
-    const doneCount = FIGURES.filter(f => state.stamps[f.id]).length;
-    progressCountEl.textContent = `${doneCount} / ${total}`;
-    progressBarEl.style.width = `${(doneCount / total) * 100}%`;
-    completionMessageEl.style.display = doneCount === total ? "flex" : "none";
-  }
-
-  function showScanMessage(type, html) {
-    scanMessageEl.style.display = "flex";
-    scanMessageTextEl.innerHTML = html;
-    if (type === "success") {
-      scanMessageEl.classList.add("message-success");
-      scanMessageIconEl.textContent = "✅";
-    } else if (type === "error") {
-      scanMessageEl.classList.remove("message-success");
-      scanMessageIconEl.textContent = "⚠️";
-    } else {
-      scanMessageEl.classList.remove("message-success");
-      scanMessageIconEl.textContent = "ℹ️";
-    }
-  }
-
-  // --- QR リーダ -----------------------------------------------------
-
-  let html5QrCode = null;
-  let isScanning = false;
-
-  const scanToggleBtn = document.getElementById("scan-toggle");
-  const scanToggleText = document.getElementById("scan-toggle-text");
-  const scanToggleIcon = document.getElementById("scan-toggle-icon");
-  const cameraBlockEl = document.getElementById("camera-block");
-
-  // ★ 追加：カメラ使用許可を先に確認する関数
-  async function ensureCameraPermission() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error("この端末／ブラウザではカメラAPIが利用できません。");
-    }
-
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
+      FIGURES.forEach(f => {
+        if (!(f.id in state.stamps)) state.stamps[f.id] = false;
       });
-      // 許可確認だけなので、すぐ止める
-      stream.getTracks().forEach(track => track.stop());
-    } catch (err) {
-      // エラーはそのまま投げなおす（呼び出し側でメッセージを整形）
-      throw err;
     }
-  }
 
-  async function startScanning() {
-    if (isScanning) return;
+    function saveState() {
+      try {
+        state.lastUpdated = new Date().toISOString();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error("Failed to save state:", e);
+      }
+    }
 
-    cameraBlockEl.style.display = "block";
-    scanToggleBtn.disabled = true;
-    scanToggleText.textContent = "起動中…";
-    scanToggleIcon.textContent = "⏳";
+    const gridEl = document.querySelector(".grid");
+    const progressCountEl = document.getElementById("progress-count");
+    const progressBarEl = document.getElementById("progress-bar");
+    const completionMessageEl = document.getElementById("completion-message");
+    const scanMessageEl = document.getElementById("scan-message");
+    const scanMessageIconEl = document.getElementById("scan-message-icon");
+    const scanMessageTextEl = document.getElementById("scan-message-text");
 
-    try {
-      // まずブラウザにカメラ許可をリクエスト
-      await ensureCameraPermission();
+    function renderGrid() {
+      gridEl.innerHTML = "";
+      FIGURES.forEach((fig, index) => {
+        const done = !!state.stamps[fig.id];
+        const card = document.createElement("article");
+        card.className = "stamp-card" + (done ? " complete" : "");
+        card.setAttribute("data-id", fig.id);
+        card.innerHTML = `
+          <div class="stamp-title">
+            <span>${index + 1}. ${fig.nameEn}</span>
+            <span class="stamp-title-ja">${fig.nameJa}</span>
+          </div>
+          <div class="stamp-status">
+            <span class="badge ${done ? "badge-done" : "badge-yet"}">
+              ${done ? "GET!" : "まだ"}
+            </span>
+            <span>${done ? "QRコードを読み取り済み" : "ポスターのQRコードをさがしてスキャンしよう"}</span>
+          </div>
+          <div class="stamp-stampmark">STAMP</div>
+        `;
+        gridEl.appendChild(card);
+      });
+    }
 
-      if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("qr-reader");
+    function updateProgress() {
+      const total = FIGURES.length;
+      const doneCount = FIGURES.filter(f => state.stamps[f.id]).length;
+      progressCountEl.textContent = `${doneCount} / ${total}`;
+      progressBarEl.style.width = `${(doneCount / total) * 100}%`;
+      completionMessageEl.style.display = doneCount === total ? "flex" : "none";
+    }
+
+    function showScanMessage(type, html) {
+      scanMessageEl.style.display = "flex";
+      scanMessageTextEl.innerHTML = html;
+      if (type === "success") {
+        scanMessageEl.classList.add("message-success");
+        scanMessageIconEl.textContent = "✅";
+      } else if (type === "error") {
+        scanMessageEl.classList.remove("message-success");
+        scanMessageIconEl.textContent = "⚠️";
+      } else {
+        scanMessageEl.classList.remove("message-success");
+        scanMessageIconEl.textContent = "ℹ️";
+      }
+    }
+
+    let html5QrCode = null;
+    let isScanning = false;
+
+    const scanToggleBtn = document.getElementById("scan-toggle");
+    const scanToggleText = document.getElementById("scan-toggle-text");
+    const scanToggleIcon = document.getElementById("scan-toggle-icon");
+    const cameraBlockEl = document.getElementById("camera-block");
+
+    async function ensureCameraPermission() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("この端末／ブラウザではカメラAPIが利用できません。");
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }
+        });
+        stream.getTracks().forEach(track => track.stop());
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    async function startScanning() {
+      if (isScanning) return;
+
+      // ✅ ここでライブラリ読み込みチェック
+      if (typeof Html5Qrcode === "undefined") {
+        showScanMessage(
+          "error",
+          "QRコード読み取りライブラリを読み込めませんでした。ネットワークやCDNへのアクセス制限をご確認ください。"
+        );
+        return;
       }
 
-      const config = { fps: 10, qrbox: 260 };
+      cameraBlockEl.style.display = "block";
+      scanToggleBtn.disabled = true;
+      scanToggleText.textContent = "起動中…";
+      scanToggleIcon.textContent = "⏳";
 
-      await html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        onQrCodeScanned,
-        errorMessage => {
-          // 認識失敗はコンソールログだけ
-          // console.log("QR scan error:", errorMessage);
+      try {
+        await ensureCameraPermission();
+
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("qr-reader");
         }
-      );
 
-      isScanning = true;
-      scanToggleBtn.disabled = false;
-      scanToggleText.textContent = "カメラを停止";
-      scanToggleIcon.textContent = "🛑";
-      showScanMessage("info", "ポスターのQRコードにかざしてください。");
-    } catch (err) {
-      console.error("Failed to start scanner:", err);
+        const config = { fps: 10, qrbox: 260 };
 
-      let msg = "カメラを起動できませんでした。ブラウザの設定やHTTPS接続（GitHub Pages）をご確認ください。";
-      if (err.name === "NotAllowedError" || err.name === "SecurityError") {
-        msg = "ブラウザからカメラ使用が拒否されました。アドレスバー付近のカメラアイコンから「許可」に変更してください。";
-      } else if (err.name === "NotFoundError" || err.name === "OverconstrainedError") {
-        msg = "カメラが見つかりませんでした。この端末にカメラが搭載されているかご確認ください。";
-      } else if (err.message && err.message.includes("カメラAPIが利用できません")) {
-        msg = err.message;
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          onQrCodeScanned,
+          () => {}
+        );
+
+        isScanning = true;
+        scanToggleBtn.disabled = false;
+        scanToggleText.textContent = "カメラを停止";
+        scanToggleIcon.textContent = "🛑";
+        showScanMessage("info", "ポスターのQRコードにかざしてください。");
+      } catch (err) {
+        console.error("Failed to start scanner:", err);
+
+        let msg = "カメラを起動できませんでした。ブラウザの設定やHTTPS接続（GitHub Pages）をご確認ください。";
+        if (err.name === "NotAllowedError" || err.name === "SecurityError") {
+          msg = "ブラウザからカメラ使用が拒否されました。アドレスバー付近のカメラアイコンから「許可」に変更してください。";
+        } else if (err.name === "NotFoundError" || err.name === "OverconstrainedError") {
+          msg = "カメラが見つかりませんでした。この端末にカメラが搭載されているかご確認ください。";
+        } else if (err.message && err.message.includes("カメラAPIが利用できません")) {
+          msg = err.message;
+        }
+
+        showScanMessage("error", msg);
+
+        isScanning = false;
+        cameraBlockEl.style.display = "none";
+        scanToggleBtn.disabled = false;
+        scanToggleText.textContent = "カメラを起動";
+        scanToggleIcon.textContent = "📷";
       }
+    }
 
-      showScanMessage("error", msg);
+    async function stopScanning() {
+      if (!isScanning) return;
+
+      scanToggleBtn.disabled = true;
+      scanToggleText.textContent = "停止中…";
+      scanToggleIcon.textContent = "⏳";
+
+      try {
+        if (html5QrCode && html5QrCode.isScanning) {
+          await html5QrCode.stop();
+        }
+      } catch (err) {
+        console.error("Failed to stop scanner:", err);
+      }
 
       isScanning = false;
       cameraBlockEl.style.display = "none";
@@ -650,108 +661,68 @@
       scanToggleText.textContent = "カメラを起動";
       scanToggleIcon.textContent = "📷";
     }
-  }
 
-  async function stopScanning() {
-    if (!isScanning) return;
+    function onQrCodeScanned(decodedText) {
+      const trimmed = decodedText.trim();
+      const figure = FIGURES.find(f => trimmed.includes(f.fragment));
 
-    scanToggleBtn.disabled = true;
-    scanToggleText.textContent = "停止中…";
-    scanToggleIcon.textContent = "⏳";
-
-    try {
-      if (html5QrCode && html5QrCode.isScanning) {
-        await html5QrCode.stop();
+      if (!figure) {
+        showScanMessage(
+          "info",
+          `このQRコードは、このスタンプラリーの対象外のようです。<br><small>読み取った内容: <code>${escapeHtml(trimmed.slice(0, 80))}${trimmed.length > 80 ? "…" : ""}</code></small>`
+        );
+        return;
       }
-    } catch (err) {
-      console.error("Failed to stop scanner:", err);
+
+      if (state.stamps[figure.id]) {
+        showScanMessage(
+          "info",
+          `${figure.nameEn}（${figure.nameJa}）のスタンプはすでに取得済みです。`
+        );
+      } else {
+        state.stamps[figure.id] = true;
+        saveState();
+        renderGrid();
+        updateProgress();
+        showScanMessage(
+          "success",
+          `${figure.nameEn}（${figure.nameJa}）のスタンプをゲットしました！`
+        );
+      }
     }
 
-    isScanning = false;
-    cameraBlockEl.style.display = "none";
-    scanToggleBtn.disabled = false;
-    scanToggleText.textContent = "カメラを起動";
-    scanToggleIcon.textContent = "📷";
-  }
-
-  function onQrCodeScanned(decodedText) {
-    const trimmed = decodedText.trim();
-    const figure = FIGURES.find(f => trimmed.includes(f.fragment));
-
-    if (!figure) {
-      showScanMessage(
-        "info",
-        `このQRコードは、このスタンプラリーの対象外のようです。<br><small>読み取った内容: <code>${escapeHtml(trimmed.slice(0, 80))}${trimmed.length > 80 ? "…" : ""}</code></small>`
-      );
-      return;
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    if (state.stamps[figure.id]) {
-      showScanMessage(
-        "info",
-        `${figure.nameEn}（${figure.nameJa}）のスタンプはすでに取得済みです。`
-      );
-    } else {
-      state.stamps[figure.id] = true;
+    scanToggleBtn.addEventListener("click", () => {
+      if (!isScanning) startScanning();
+      else stopScanning();
+    });
+
+    document.getElementById("reset-button").addEventListener("click", () => {
+      if (!window.confirm("本当にスタンプの進行状況をリセットしますか？")) return;
+      FIGURES.forEach(f => (state.stamps[f.id] = false));
       saveState();
       renderGrid();
       updateProgress();
-      showScanMessage(
-        "success",
-        `${figure.nameEn}（${figure.nameJa}）のスタンプをゲットしました！`
-      );
-    }
-  }
-
-  function escapeHtml(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-  }
-
-  // --- ボタン動作 ----------------------------------------------------
-
-  scanToggleBtn.addEventListener("click", () => {
-    if (!isScanning) {
-      startScanning();
-    } else {
-      stopScanning();
-    }
-  });
-
-  document.getElementById("reset-button").addEventListener("click", () => {
-    if (!window.confirm("本当にスタンプの進行状況をリセットしますか？")) return;
-    FIGURES.forEach(f => {
-      state.stamps[f.id] = false;
+      showScanMessage("info", "スタンプの進行状況をリセットしました。");
     });
-    saveState();
+
+    document.getElementById("open-target-page").addEventListener("click", () => {
+      window.open(
+        "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/",
+        "_blank",
+        "noopener"
+      );
+    });
+
+    loadState();
     renderGrid();
     updateProgress();
-    showScanMessage("info", "スタンプの進行状況をリセットしました。");
-  });
 
-  document.getElementById("open-target-page").addEventListener("click", () => {
-    window.open(
-      "https://wwp.shizuoka.ac.jp/vision-i/%E6%83%85%E5%A0%B1%E5%AD%A6%E3%81%AE%E5%81%89%E4%BA%BA/",
-      "_blank",
-      "noopener"
-    );
-  });
-
-  // --- 初期化 --------------------------------------------------------
-
-  loadState();
-  renderGrid();
-  updateProgress();
-
-  window.addEventListener("pagehide", () => {
-    stopScanning();
-  });
-  window.addEventListener("beforeunload", () => {
-    stopScanning();
-  });
-</script>
-
+    window.addEventListener("pagehide", () => stopScanning());
+    window.addEventListener("beforeunload", () => stopScanning());
+  </script>
 </body>
 </html>
