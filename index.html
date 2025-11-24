@@ -1,265 +1,284 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Award, CheckCircle, Circle, QrCode, X } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>情報学の偉人スタンプラリー</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    const { Camera, Award, CheckCircle, Circle, QrCode, X } = lucide;
 
-const pioneers = [
-  { id: 1, name: 'グレイス・ホッパー', nameEn: 'Grace Hopper', field: 'コンパイラの開発' },
-  { id: 2, name: 'ティム・バーナーズ=リー', nameEn: 'Tim Berners-Lee', field: 'World Wide Web' },
-  { id: 3, name: 'マーヴィン・ミンスキー', nameEn: 'Marvin Minsky', field: '人工知能' },
-  { id: 4, name: 'アラン・チューリング', nameEn: 'Alan Turing', field: '計算理論' },
-  { id: 5, name: 'クロード・シャノン', nameEn: 'Claude Shannon', field: '情報理論' },
-  { id: 6, name: 'ジョン・フォン・ノイマン', nameEn: 'John von Neumann', field: 'コンピュータ設計' },
-  { id: 7, name: 'アラン・ケイ', nameEn: 'Alan Kay', field: 'オブジェクト指向' },
-  { id: 8, name: '村井 純', nameEn: 'Jun Murai', field: '日本のインターネット' },
-  { id: 9, name: 'ハーバート・サイモン', nameEn: 'Herbert Simon', field: '人工知能・認知科学' }
-];
+    const pioneers = [
+      { id: 1, name: 'グレイス・ホッパー', nameEn: 'Grace Hopper', field: 'コンパイラの開発' },
+      { id: 2, name: 'ティム・バーナーズ=リー', nameEn: 'Tim Berners-Lee', field: 'World Wide Web' },
+      { id: 3, name: 'マーヴィン・ミンスキー', nameEn: 'Marvin Minsky', field: '人工知能' },
+      { id: 4, name: 'アラン・チューリング', nameEn: 'Alan Turing', field: '計算理論' },
+      { id: 5, name: 'クロード・シャノン', nameEn: 'Claude Shannon', field: '情報理論' },
+      { id: 6, name: 'ジョン・フォン・ノイマン', nameEn: 'John von Neumann', field: 'コンピュータ設計' },
+      { id: 7, name: 'アラン・ケイ', nameEn: 'Alan Kay', field: 'オブジェクト指向' },
+      { id: 8, name: '村井 純', nameEn: 'Jun Murai', field: '日本のインターネット' },
+      { id: 9, name: 'ハーバート・サイモン', nameEn: 'Herbert Simon', field: '人工知能・認知科学' }
+    ];
 
-export default function StampRally() {
-  const [collectedStamps, setCollectedStamps] = useState([]);
-  const [scanning, setScanning] = useState(false);
-  const [showComplete, setShowComplete] = useState(false);
-  const [lastScanned, setLastScanned] = useState(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const streamRef = useRef(null);
-  const scanIntervalRef = useRef(null);
+    function StampRally() {
+      const [collectedStamps, setCollectedStamps] = useState([]);
+      const [scanning, setScanning] = useState(false);
+      const [showComplete, setShowComplete] = useState(false);
+      const [lastScanned, setLastScanned] = useState(null);
+      const videoRef = useRef(null);
+      const canvasRef = useRef(null);
+      const streamRef = useRef(null);
+      const scanIntervalRef = useRef(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('stampRallyProgress');
-    if (saved) {
-      const stamps = JSON.parse(saved);
-      setCollectedStamps(stamps);
-      if (stamps.length === pioneers.length) {
-        setShowComplete(true);
-      }
-    }
-  }, []);
+      useEffect(() => {
+        const saved = localStorage.getItem('stampRallyProgress');
+        if (saved) {
+          const stamps = JSON.parse(saved);
+          setCollectedStamps(stamps);
+          if (stamps.length === pioneers.length) {
+            setShowComplete(true);
+          }
+        }
+      }, []);
 
-  useEffect(() => {
-    localStorage.setItem('stampRallyProgress', JSON.stringify(collectedStamps));
-    if (collectedStamps.length === pioneers.length && collectedStamps.length > 0) {
-      setShowComplete(true);
-    }
-  }, [collectedStamps]);
+      useEffect(() => {
+        localStorage.setItem('stampRallyProgress', JSON.stringify(collectedStamps));
+        if (collectedStamps.length === pioneers.length && collectedStamps.length > 0) {
+          setShowComplete(true);
+        }
+      }, [collectedStamps]);
 
-  const startScanning = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setScanning(true);
-        
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
-          scanIntervalRef.current = setInterval(scanQRCode, 500);
-        };
-      }
-    } catch (err) {
-      alert('カメラへのアクセスが許可されていません。ブラウザの設定を確認してください。');
-    }
-  };
+      const startScanning = async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+          });
+          
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            streamRef.current = stream;
+            setScanning(true);
+            
+            videoRef.current.onloadedmetadata = () => {
+              videoRef.current.play();
+              scanIntervalRef.current = setInterval(scanQRCode, 500);
+            };
+          }
+        } catch (err) {
+          alert('カメラへのアクセスが許可されていません。ブラウザの設定を確認してください。');
+        }
+      };
 
-  const stopScanning = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-    setScanning(false);
-  };
+      const stopScanning = () => {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
+        if (scanIntervalRef.current) {
+          clearInterval(scanIntervalRef.current);
+          scanIntervalRef.current = null;
+        }
+        setScanning(false);
+      };
 
-  const scanQRCode = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+      const scanQRCode = () => {
+        if (!videoRef.current || !canvasRef.current) return;
 
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
 
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height);
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-      if (code) {
-        handleQRCodeScanned(code.data);
-      }
-    }
-  };
+          if (code) {
+            handleQRCodeScanned(code.data);
+          }
+        }
+      };
 
-  const handleQRCodeScanned = (data) => {
-    // 静岡大学のURLから偉人IDを抽出
-    const match = data.match(/grate?figures_(\d+)/);
-    if (match) {
-      const pioneerId = parseInt(match[1]);
-      const pioneer = pioneers.find(p => p.id === pioneerId);
-      
-      if (pioneer && !collectedStamps.includes(pioneerId)) {
-        setCollectedStamps([...collectedStamps, pioneerId]);
-        setLastScanned(pioneer);
-        stopScanning();
-        
-        setTimeout(() => setLastScanned(null), 3000);
-      }
-    }
-  };
+      const handleQRCodeScanned = (data) => {
+        const match = data.match(/grate?figures_(\d+)/);
+        if (match) {
+          const pioneerId = parseInt(match[1]);
+          const pioneer = pioneers.find(p => p.id === pioneerId);
+          
+          if (pioneer && !collectedStamps.includes(pioneerId)) {
+            setCollectedStamps([...collectedStamps, pioneerId]);
+            setLastScanned(pioneer);
+            stopScanning();
+            
+            setTimeout(() => setLastScanned(null), 3000);
+          }
+        }
+      };
 
-  const resetProgress = () => {
-    if (confirm('スタンプラリーの進捗をリセットしますか?')) {
-      setCollectedStamps([]);
-      setShowComplete(false);
-      localStorage.removeItem('stampRallyProgress');
-    }
-  };
+      const resetProgress = () => {
+        if (confirm('スタンプラリーの進捗をリセットしますか?')) {
+          setCollectedStamps([]);
+          setShowComplete(false);
+          localStorage.removeItem('stampRallyProgress');
+        }
+      };
 
-  const progress = (collectedStamps.length / pioneers.length) * 100;
+      const progress = (collectedStamps.length / pioneers.length) * 100;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-indigo-900 mb-2">
-              情報学の偉人スタンプラリー
-            </h1>
-            <p className="text-gray-600">
-              9人の偉人を見つけてスタンプを集めよう!
-            </p>
-          </div>
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+              <div className="text-center mb-6">
+                <h1 className="text-3xl font-bold text-indigo-900 mb-2">
+                  情報学の偉人スタンプラリー
+                </h1>
+                <p className="text-gray-600">
+                  9人の偉人を見つけてスタンプを集めよう!
+                </p>
+              </div>
 
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-700">
-                {collectedStamps.length} / {pioneers.length} 達成
-              </span>
-              <span className="text-sm font-medium text-indigo-600">
-                {Math.round(progress)}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-
-          {!scanning ? (
-            <button
-              onClick={startScanning}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg"
-            >
-              <Camera size={24} />
-              QRコードをスキャン
-            </button>
-          ) : (
-            <div className="space-y-4">
-              <div className="relative bg-black rounded-xl overflow-hidden">
-                <video 
-                  ref={videoRef} 
-                  className="w-full"
-                  playsInline
-                  muted
-                />
-                <div className="absolute inset-0 border-4 border-indigo-500 pointer-events-none">
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white rounded-lg" />
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    {collectedStamps.length} / {pioneers.length} 達成
+                  </span>
+                  <span className="text-sm font-medium text-indigo-600">
+                    {Math.round(progress)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="bg-gradient-to-r from-indigo-500 to-purple-500 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${progress}%` }}
+                  />
                 </div>
               </div>
-              <button
-                onClick={stopScanning}
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                <X size={20} />
-                キャンセル
-              </button>
-            </div>
-          )}
-          
-          <canvas ref={canvasRef} className="hidden" />
-        </div>
 
-        {lastScanned && (
-          <div className="bg-green-500 text-white rounded-2xl shadow-xl p-6 mb-6 animate-bounce">
-            <div className="text-center">
-              <CheckCircle size={48} className="mx-auto mb-3" />
-              <h3 className="text-2xl font-bold mb-2">スタンプ獲得!</h3>
-              <p className="text-lg">{lastScanned.name}</p>
-              <p className="text-sm opacity-90">{lastScanned.field}</p>
-            </div>
-          </div>
-        )}
-
-        {showComplete && (
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-2xl shadow-xl p-8 mb-6">
-            <div className="text-center">
-              <Award size={64} className="mx-auto mb-4" />
-              <h2 className="text-3xl font-bold mb-2">🎉 コンプリート! 🎉</h2>
-              <p className="text-lg">
-                おめでとうございます!<br />
-                すべての偉人を発見しました!
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="bg-white rounded-2xl shadow-xl p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <QrCode size={24} />
-            コレクション
-          </h2>
-          <div className="grid grid-cols-1 gap-3">
-            {pioneers.map(pioneer => {
-              const collected = collectedStamps.includes(pioneer.id);
-              return (
-                <div
-                  key={pioneer.id}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    collected
-                      ? 'bg-indigo-50 border-indigo-300'
-                      : 'bg-gray-50 border-gray-200 opacity-60'
-                  }`}
+              {!scanning ? (
+                <button
+                  onClick={startScanning}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg"
                 >
-                  <div className="flex items-center gap-3">
-                    {collected ? (
-                      <CheckCircle className="text-indigo-600 flex-shrink-0" size={24} />
-                    ) : (
-                      <Circle className="text-gray-400 flex-shrink-0" size={24} />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 truncate">
-                        {pioneer.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 truncate">
-                        {pioneer.nameEn}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {pioneer.field}
-                      </p>
+                  <Camera size={24} />
+                  QRコードをスキャン
+                </button>
+              ) : (
+                <div className="space-y-4">
+                  <div className="relative bg-black rounded-xl overflow-hidden">
+                    <video 
+                      ref={videoRef} 
+                      className="w-full"
+                      playsInline
+                      muted
+                    />
+                    <div className="absolute inset-0 border-4 border-indigo-500 pointer-events-none">
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white rounded-lg" />
                     </div>
                   </div>
+                  <button
+                    onClick={stopScanning}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    <X size={20} />
+                    キャンセル
+                  </button>
                 </div>
-              );
-            })}
+              )}
+              
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+
+            {lastScanned && (
+              <div className="bg-green-500 text-white rounded-2xl shadow-xl p-6 mb-6 animate-bounce">
+                <div className="text-center">
+                  <CheckCircle size={48} className="mx-auto mb-3" />
+                  <h3 className="text-2xl font-bold mb-2">スタンプ獲得!</h3>
+                  <p className="text-lg">{lastScanned.name}</p>
+                  <p className="text-sm opacity-90">{lastScanned.field}</p>
+                </div>
+              </div>
+            )}
+
+            {showComplete && (
+              <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-2xl shadow-xl p-8 mb-6">
+                <div className="text-center">
+                  <Award size={64} className="mx-auto mb-4" />
+                  <h2 className="text-3xl font-bold mb-2">🎉 コンプリート! 🎉</h2>
+                  <p className="text-lg">
+                    おめでとうございます!<br />
+                    すべての偉人を発見しました!
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-2xl shadow-xl p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <QrCode size={24} />
+                コレクション
+              </h2>
+              <div className="grid grid-cols-1 gap-3">
+                {pioneers.map(pioneer => {
+                  const collected = collectedStamps.includes(pioneer.id);
+                  return (
+                    <div
+                      key={pioneer.id}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        collected
+                          ? 'bg-indigo-50 border-indigo-300'
+                          : 'bg-gray-50 border-gray-200 opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {collected ? (
+                          <CheckCircle className="text-indigo-600 flex-shrink-0" size={24} />
+                        ) : (
+                          <Circle className="text-gray-400 flex-shrink-0" size={24} />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-gray-900 truncate">
+                            {pioneer.name}
+                          </h3>
+                          <p className="text-sm text-gray-600 truncate">
+                            {pioneer.nameEn}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {pioneer.field}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={resetProgress}
+                className="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-6 rounded-xl transition-colors"
+              >
+                進捗をリセット
+              </button>
+            </div>
           </div>
-
-          <button
-            onClick={resetProgress}
-            className="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-6 rounded-xl transition-colors"
-          >
-            進捗をリセット
-          </button>
         </div>
-      </div>
+      );
+    }
 
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
-    </div>
-  );
-}
+    ReactDOM.render(<StampRally />, document.getElementById('root'));
+  </script>
+</body>
+</html>
