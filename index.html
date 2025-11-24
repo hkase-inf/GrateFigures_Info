@@ -102,22 +102,50 @@
 
       const startScanning = async () => {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
-          });
+          // より詳細なカメラ設定
+          const constraints = {
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            }
+          };
+
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
           
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
             streamRef.current = stream;
             setScanning(true);
             
-            videoRef.current.onloadedmetadata = () => {
-              videoRef.current.play();
-              scanIntervalRef.current = setInterval(scanQRCode, 500);
+            // 明示的に再生を開始
+            videoRef.current.onloadedmetadata = async () => {
+              try {
+                await videoRef.current.play();
+                console.log('カメラ起動成功');
+                scanIntervalRef.current = setInterval(scanQRCode, 500);
+              } catch (playErr) {
+                console.error('再生エラー:', playErr);
+                alert('カメラの再生に失敗しました: ' + playErr.message);
+              }
             };
           }
         } catch (err) {
-          alert('カメラへのアクセスが許可されていません。ブラウザの設定を確認してください。');
+          console.error('カメラエラー:', err);
+          let errorMsg = 'カメラへのアクセスに失敗しました。\n\n';
+          
+          if (err.name === 'NotAllowedError') {
+            errorMsg += 'カメラの使用が許可されていません。ブラウザの設定を確認してください。';
+          } else if (err.name === 'NotFoundError') {
+            errorMsg += 'カメラが見つかりません。';
+          } else if (err.name === 'NotReadableError') {
+            errorMsg += 'カメラが他のアプリで使用中の可能性があります。';
+          } else {
+            errorMsg += 'エラー: ' + err.message;
+          }
+          
+          alert(errorMsg);
+          setScanning(false);
         }
       };
 
@@ -220,11 +248,13 @@
                 </button>
               ) : (
                 <div className="space-y-4">
-                  <div className="relative bg-black rounded-xl overflow-hidden">
+                  <div className="relative bg-black rounded-xl overflow-hidden" style={{ minHeight: '300px' }}>
                     <video 
                       ref={videoRef} 
-                      className="w-full"
+                      className="w-full h-full object-cover"
+                      style={{ minHeight: '300px' }}
                       playsInline
+                      autoPlay
                       muted
                     />
                     <div className="absolute inset-0 border-4 border-indigo-500 pointer-events-none">
